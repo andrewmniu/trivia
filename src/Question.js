@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 
 function shuffle(array) {
@@ -22,27 +22,52 @@ function shuffle(array) {
 }
 
 const Question = ({ question, key }) => {
+  const [answers, setAnswers] = useState([]);
+  const [answered, setAnswered] = useState(false);
+
+  useEffect(() => setAnswers(createAnswers(question)), []);
+
   const createAnswers = (question) => {
-    let answers = [question.correct_answer];
+    let answers = [[question.correct_answer, 1]];
     for (let answer of question.incorrect_answers) {
-      answers.push(answer);
+      answers.push([answer, 0]);
     }
     shuffle(answers);
     return answers;
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setAnswered(true);
+  };
+
   return (
     <>
       <h1>{question.question}</h1>
-      {createAnswers(question).map((answer, idx) => (
-        <>
-          <input type="radio" id={idx} name={`Question ${key}`}></input>
-          <label for={idx}> {answer} </label>
-          <br />
-        </>
-      ))}
-      <input type="submit" value="Submit" />
-      <form></form>
+      <form onSubmit={(e) => handleSubmit(e)}>
+        {answers.map((answer, idx) => (
+          <>
+            {answer[1] ? (
+              <p style={{ color: "green" }} hidden={!answered}>
+                Correct!
+              </p>
+            ) : (
+              <p style={{ color: "red" }} hidden={!answered}>
+                Incorrect.
+              </p>
+            )}
+            <input
+              type="radio"
+              id={idx}
+              name={`Question ${key}`}
+              disabled={answered}
+            />
+            <label for={idx}> {answer[0]} </label>
+            <br />
+          </>
+        ))}
+        <input type="submit" value="Submit" />
+      </form>
     </>
   );
 };
